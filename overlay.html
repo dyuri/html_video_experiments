@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Video overlay demo</title>
+  <style>
+    #container {
+      width: 960px;
+      height: 540px;
+      margin: auto;
+      position: relative;
+    }
+    #video, #canvas {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <video id="video" autoplay loop muted width="960" height="540">
+      <source src="video.mp4" type="video/mp4">
+    </video>
+    <canvas id="canvas" width="960" height="540"></canvas>
+  </div>
+<script>
+let w = 960;
+let h = 540;
+let v = document.getElementById('video');
+let c = document.getElementById('canvas');
+let ctx = c.getContext('2d');
+let back = document.createElement('canvas');
+let bctx = back.getContext('2d');
+back.width = w;
+back.height = h;
+let lastDraw = null;
+
+const draw = () => {
+  if (!v.paused && !v.ended) {
+    bctx.drawImage(v, 0, 0, w, h);
+    let idata = bctx.getImageData(0, 0, w, h);
+    let data = idata.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      let r = data[i];
+      let g = data[i];
+      let b = data[i];
+
+      let bw = (3*r+4*g+b)>>>3;
+      data[i] = bw;
+      data[i+1] = bw;
+      data[i+2] = bw;
+      data[i+3] = bw << 1;
+    }
+    idata.data = data;
+
+    ctx.putImageData(idata, 0, 0);
+  }
+
+  // fps counter
+  let time = +new Date();
+  let dtime = (time - lastDraw)/1000;
+  lastDraw = time;
+  fps = (1 / dtime).toFixed(2);
+  ctx.font = "16px monospace";
+  ctx.fillStyle = "#ffaaaa";
+  ctx.fillText(fps + ' fps', 10, 20);
+  requestAnimationFrame(draw);
+};
+
+draw();
+
+</script>
+</body>
+</html>
